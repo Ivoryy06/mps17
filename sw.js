@@ -1,12 +1,16 @@
-const CACHE_NAME = 'mps-v1';
+const CACHE_NAME = 'mps-v3';
+const BASE_URL = self.registration.scope;
+const toScopedUrl = (path) => new URL(path, BASE_URL).href;
+const OFFLINE_FALLBACK_URL = toScopedUrl('./index.html');
+
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/css/pagehome.css',
-  '/css/member-shared.css',
-  '/script.js',
-  '/manifest.json',
-  '/pictures/background.jpg'
+  toScopedUrl('./'),
+  OFFLINE_FALLBACK_URL,
+  toScopedUrl('./css/pagehome.css?v=8'),
+  toScopedUrl('./css/member-shared.css'),
+  toScopedUrl('./script.js'),
+  toScopedUrl('./manifest.json'),
+  toScopedUrl('./pictures/background.jpg?v=2')
 ];
 
 self.addEventListener('install', event => {
@@ -15,6 +19,20 @@ self.addEventListener('install', event => {
       .then(cache => cache.addAll(STATIC_ASSETS))
       .catch(error => console.error('Cache install failed:', error))
   );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames =>
+      Promise.all(
+        cacheNames
+          .filter(cacheName => cacheName !== CACHE_NAME)
+          .map(cacheName => caches.delete(cacheName))
+      )
+    )
+  );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
@@ -41,7 +59,7 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match(OFFLINE_FALLBACK_URL);
         }
       })
   );

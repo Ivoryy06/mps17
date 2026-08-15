@@ -8,7 +8,7 @@
   <style>
     body {
       min-height: 100vh;
-      background: url("pictures/background.jpg") center/cover no-repeat fixed;
+      background: url("pictures/background.jpg?v=2") center/cover no-repeat fixed;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: #fff;
     }
@@ -51,7 +51,6 @@
     }
     .back-link:hover { background: rgba(0,0,0,0.6); }
 
-    /* Filter tabs */
     .filter-bar {
       display: flex;
       flex-wrap: wrap;
@@ -80,7 +79,6 @@
       background: rgba(255,255,255,0.3);
     }
 
-    /* Masonry grid */
     .masonry {
       column-count: 4;
       column-gap: 1rem;
@@ -109,7 +107,6 @@
       text-align: center;
     }
 
-    /* Lightbox */
     .lightbox {
       display: none;
       position: fixed;
@@ -125,7 +122,6 @@
       border-radius: 8px;
     }
 
-    /* Responsive */
     @media (max-width: 1024px) { .masonry { column-count: 3; } }
     @media (max-width: 768px)  { .masonry { column-count: 2; } }
     @media (max-width: 480px) {
@@ -205,7 +201,6 @@
           });
         }
 
-        // Gen filter buttons
         const gens = ["all", ...new Set(members.map(m => m.gen).sort((a,b) => a-b))];
         gens.forEach(g => {
           const btn = document.createElement("button");
@@ -227,7 +222,7 @@
 
         buildMemberBar("all");
 
-        // Build masonry items — one card per photo
+        const masonryItems = [];
         members.forEach(m => {
           if (!m.porto || m.porto.length === 0) return;
           m.porto.forEach(src => {
@@ -239,9 +234,16 @@
               <img src="${src}" alt="${m.name}" style="width:100%;display:block;">
               <div class="member-label">${m.name} · Gen ${m.gen}</div>
             `;
-            masonry.appendChild(item);
+            masonryItems.push(item);
           });
         });
+
+        for (let i = masonryItems.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [masonryItems[i], masonryItems[j]] = [masonryItems[j], masonryItems[i]];
+        }
+
+        masonryItems.forEach(item => masonry.appendChild(item));
 
         function applyFilter() {
           document.querySelectorAll(".masonry-item").forEach(item => {
@@ -265,3 +267,4 @@
 
 </body>
 </html>
+

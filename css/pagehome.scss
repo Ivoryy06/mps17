@@ -63,7 +63,7 @@ body {
 .hero {
   min-height: auto;
   position: relative;
-  background: url("background.jpg") center/cover no-repeat;
+  background: url("background.jpg?v=2") center/cover no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -253,3 +253,4 @@ body {
     a { font-size: 2rem; color: white; text-decoration: none; }
   }
 }
+

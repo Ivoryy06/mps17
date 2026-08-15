@@ -10,7 +10,7 @@
   
   <meta property="og:title" content="Marsudirini Photography Students">
   <meta property="og:description" content="Portfolio of MPS Generation 17 photographers and videographers.">
-  <meta property="og:image" content="https://ivoryy06.github.io/mps/pictures/background.jpg">
+  <meta property="og:image" content="https://ivoryy06.github.io/mps/pictures/background.jpg?v=2">
   <meta property="og:url" content="https://ivoryy06.github.io/mps">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
@@ -26,7 +26,7 @@
     }
   </script>
 
-  <link rel="stylesheet" href="css/pagehome.css?v=7">
+  <link rel="stylesheet" href="css/pagehome.css?v=8">
 
   <style>
     /* ==============================
@@ -301,14 +301,7 @@
     .skel-img   { height: 160px; width: 100%; }
     @keyframes shimmer { to { background-position: -200% 0; } }
 
-    .bio {
-      display: none;
-      margin-top: 0.75rem;
-      font-size: 0.9rem;
-      color: #ddd;
-    }
-
-    .bio-socials {
+    .member-socials {
       display: flex;
       gap: 0.5rem;
       justify-content: center;
@@ -316,7 +309,7 @@
       flex-wrap: wrap;
     }
 
-    .bio-socials a {
+    .member-socials a {
       padding: 0.3rem 0.8rem;
       border-radius: 999px;
       background: rgba(255,255,255,0.12);
@@ -326,16 +319,16 @@
       transition: background 0.2s;
     }
 
-    .bio-socials a:hover { background: rgba(255,255,255,0.25); }
+    .member-socials a:hover { background: rgba(255,255,255,0.25); }
 
-    .toggle-bio {
-      margin-top: 0.5rem;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 0.3rem 0.6rem;
-      cursor: pointer;
+    .team li.section-divider {
+      background: rgba(255,255,255,0.08);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: default;
+      pointer-events: none;
     }
 
     .lazy {
@@ -397,7 +390,6 @@
     <h1>Marsudirini Photography Students</h1>
     <p>Save every second of our journey, for our future. Generation: <span id="active-gen">17</span></p>
     <div class="gen-filter" id="gen-filter">
-      <button class="gen-btn" data-gen="16">Angkatan 16</button>
       <button class="gen-btn active" data-gen="17">Angkatan 17</button>
       <button class="gen-btn" data-gen="18">Angkatan 18</button>
     </div>
@@ -448,18 +440,22 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("members.json")
     .then(r => r.json())
     .then(members => {
-      ul.innerHTML = members.map(m => `
-        <li data-link="${m.page}" data-gen="${m.gen || 17}">
+      const inProgressNames = new Set(["Matheuw", "Darren", "Charis"]);
+      const renderMemberCard = (m) => `
+        <li data-link="${m.page}" data-gen="${m.gen || 17}" data-in-progress="${inProgressNames.has(m.name) ? "1" : "0"}">
           <h3>${m.name}<br>${m.role}</h3>
           ${m.widget ? `<div class="insta-single"><iframe src="https://snapwidget.com/embed/${m.widget}" class="snapwidget-widget" allowtransparency="true" frameborder="0" scrolling="no" style="border:none;overflow:hidden;width:100%;" title="Posts from Instagram"></iframe></div>` : `<img class="lazy" src="${m.photo || 'placeholder.jpg'}" data-src="${m.photo || 'placeholder.jpg'}">`}
-          <div class="bio">
-            <p>(BIO goes here)</p>
-            <div class="bio-socials">
-              ${m.instagram ? `<a href="${m.instagram}" target="_blank" onclick="event.stopPropagation()">📷 Instagram</a>` : ""}
-            </div>
-          </div>
-          <button class="toggle-bio">Read More</button>
-        </li>`).join("");
+          ${m.instagram && m.instagram !== "#" ? `<div class="member-socials"><a href="${m.instagram}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">Instagram</a></div>` : ""}
+        </li>`;
+
+      const mainMembers = members.filter(m => !inProgressNames.has(m.name));
+      const inProgressMembers = members.filter(m => inProgressNames.has(m.name));
+
+      ul.innerHTML = `
+        ${mainMembers.map(renderMemberCard).join("")}
+        <li class="section-divider" id="in-progress-divider">In Progress</li>
+        ${inProgressMembers.map(renderMemberCard).join("")}
+      `;
 
       document.getElementById("member-count").textContent = `(${members.length})`;
       initCards();
@@ -489,17 +485,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".team li").forEach((card, i) => {
       card.style.transitionDelay = `${i * 0.07}s`;
       scrollObs.observe(card);
-    });
-
-    /* Toggle bio */
-    document.querySelectorAll(".toggle-bio").forEach(btn => {
-      btn.addEventListener("click", e => {
-        e.stopPropagation();
-        const bio = btn.closest("li").querySelector(".bio");
-        const open = bio.style.display === "block";
-        bio.style.display = open ? "none" : "block";
-        btn.textContent = open ? "Read More" : "Read Less";
-      });
     });
 
     /* Card navigation */
@@ -555,12 +540,22 @@ let activeGen = 17;
 function filterMembers() {
   const q = document.getElementById("search").value.toLowerCase();
   let visible = 0;
+  let visibleInProgress = 0;
   document.querySelectorAll(".team li[data-gen]").forEach(card => {
     const matchGen = parseInt(card.dataset.gen) === activeGen;
     const matchSearch = card.querySelector("h3").textContent.toLowerCase().includes(q);
     card.style.display = (matchGen && matchSearch) ? "" : "none";
-    if (matchGen && matchSearch) visible++;
+    if (matchGen && matchSearch) {
+      visible++;
+      if (card.dataset.inProgress === "1") {
+        visibleInProgress++;
+      }
+    }
   });
+  const inProgressDivider = document.getElementById("in-progress-divider");
+  if (inProgressDivider) {
+    inProgressDivider.style.display = visibleInProgress > 0 ? "" : "none";
+  }
   document.getElementById("member-count").textContent = `(${visible})`;
 }
 
