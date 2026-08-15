@@ -9,8 +9,7 @@ body {
   min-height: 100vh;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   color: #fff;
-  background: url("../pictures/background.jpg") center/cover no-repeat fixed;
-  background-color: #111;
+  background: url("../pictures/background.jpg") center/cover no-repeat fixed #111;
   color-scheme: only light;
 }
 
